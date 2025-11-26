@@ -1,6 +1,22 @@
 {
+  "name": "chefkit-server-side",
+  "version": "1.0.0",
+  "description": "Backend server for ChefKit meal kit marketplace",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": ["chefkit", "meal-kit", "api"],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "express": "^5.1.0",
-    "mongodb": "^7.0.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
