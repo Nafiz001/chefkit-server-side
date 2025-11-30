@@ -28,15 +28,16 @@ const client = new MongoClient(uri, {
     socketTimeoutMS: 10000,
 });
 
-let mealKitsCollection, usersCollection;
+let mealKitsCollection, usersCollection, reviewsCollection;
 
 async function getCollections() {
-    if (!mealKitsCollection || !usersCollection) {
+    if (!mealKitsCollection || !usersCollection || !reviewsCollection) {
         const database = client.db("chefkitDB");
         mealKitsCollection = database.collection("mealKits");
         usersCollection = database.collection("users");
+        reviewsCollection = database.collection("reviews");
     }
-    return { mealKitsCollection, usersCollection };
+    return { mealKitsCollection, usersCollection, reviewsCollection };
 }
 
 app.get('/', (req, res) => {
@@ -253,6 +254,65 @@ app.get('/my-meal-kits/:email', async (req, res) => {
     } catch (error) {
         console.error('Error fetching user meal kits:', error);
         res.json([]);
+    }
+});
+
+// Review endpoints
+app.get('/reviews/:mealKitId', async (req, res) => {
+    try {
+        const { reviewsCollection } = await getCollections();
+        
+        if (!reviewsCollection) {
+            return res.json([]);
+        }
+        
+        const mealKitId = req.params.mealKitId;
+        const query = { mealKitId: mealKitId };
+        const result = await reviewsCollection.find(query).sort({ createdAt: -1 }).toArray();
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.json([]);
+    }
+});
+
+app.post('/reviews', async (req, res) => {
+    try {
+        const { reviewsCollection } = await getCollections();
+        
+        if (!reviewsCollection) {
+            return res.status(503).json({ message: 'Database not ready' });
+        }
+        
+        const newReview = {
+            ...req.body,
+            id: Date.now().toString(),
+            createdAt: new Date().toISOString()
+        };
+        
+        const result = await reviewsCollection.insertOne(newReview);
+        res.json({ success: true, insertedId: result.insertedId });
+    } catch (error) {
+        console.error('Error adding review:', error);
+        res.status(500).json({ success: false, message: 'Error adding review', error: error.message });
+    }
+});
+
+app.delete('/reviews/:id', async (req, res) => {
+    try {
+        const { reviewsCollection } = await getCollections();
+        
+        if (!reviewsCollection) {
+            return res.status(503).json({ message: 'Database not ready' });
+        }
+        
+        const id = req.params.id;
+        const query = { id: id };
+        const result = await reviewsCollection.deleteOne(query);
+        res.send(result);
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        res.status(500).json({ message: 'Error deleting review' });
     }
 });
 
